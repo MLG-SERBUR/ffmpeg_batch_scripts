@@ -1,6 +1,7 @@
 @echo off
 :again
-
+set "drive=%~d0"
+if not "%drive%"=="%cd:~0,1%" cd /D %drive%
 cd /D %~p0
 REM SET output=%~p1%~n1_Dumcord_Crop.mp4
 SET output=%~nx1_Dumcord_Crop.mp4
