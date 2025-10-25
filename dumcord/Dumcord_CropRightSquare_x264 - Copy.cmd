@@ -17,15 +17,26 @@ SET overheadBitrate=0
 SET audioBitrate=96000
 SET /A "videoBitrate=totalBitrate-audioBitrate-overheadBitrate"
 ffmpeg ^
+	-i %1 ^
+	-c:v libx264 ^
+	-b:v %videoBitrate% ^
+	-pass 1 -an ^
+	-preset veryslow ^
+	-x264-params open-gop=1 ^
+	-filter:v "crop=in_h:in_h:(in_w-out_w)/2+100:(in_h-out_h)/2-100:0" ^
+	-f mp4 NUL && \
+ffmpeg ^
 	-y ^
 	-i %1 ^
-	-c:v h264_nvenc ^
+	-c:v libx264 ^
 	-b:v %videoBitrate% ^
+	-pass 2 ^
 	-movflags +faststart ^
-	-preset p7 ^
-	-profile high ^
-	-filter:v "crop=in_h:in_h:(in_w-out_w)/2:(in_h-out_h)/2:0" ^
+	-preset veryslow ^
+	-x264-params open-gop=1 ^
+	-filter:v "crop=in_h:in_h:(in_w-out_w)/2+300:(in_h-out_h)/2-300:0" ^
 	-b:a %audioBitrate% "%output%"
+del /q ffmpeg2pass-*.log ffmpeg2pass-*.mbtree
 if NOT ["%errorlevel%"]==["0"] goto:error
 echo [92m%~n1 Done![0m
 

@@ -19,13 +19,9 @@ SET /A "videoBitrate=totalBitrate-audioBitrate-overheadBitrate"
 ffmpeg ^
 	-y ^
 	-i %1 ^
-	-c:v h264_nvenc ^
-	-b:v %videoBitrate% ^
-	-movflags +faststart ^
-	-preset p7 ^
-	-profile high ^
-	-filter:v "crop=in_h:in_h:(in_w-out_w)/2:(in_h-out_h)/2:0" ^
+	-c:v copy ^
 	-b:a %audioBitrate% "%output%"
+del /q ffmpeg2pass-*.log ffmpeg2pass-*.mbtree
 if NOT ["%errorlevel%"]==["0"] goto:error
 echo [92m%~n1 Done![0m
 
