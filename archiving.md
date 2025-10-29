@@ -1,9 +1,13 @@
 # Recommended options
+
+Recommended options for compressing gaming clips (usually hardware encoded and thus larger than they need to be) with minimal loss in quality, tested with a single Marvel Rivals clip.
+
 Sorted from fastest & largest size to slowest & smallest size:
-    - `-c:v libx264 -crf 19 --preset slow`
-    - `-c:v libsvtav1 -crf 33 --preset 8`
-    - `-c:v libsvtav1 -crf 35 --preset 6`
-    - `-c:v libsvtav1 -crf 37 --preset 4`
+
+1. `-c:v libx264 -crf 19 --preset slow`
+1. `-c:v libsvtav1 -crf 33 --preset 8`
+1. `-c:v libsvtav1 -crf 35 --preset 6`
+1. `-c:v libsvtav1 -crf 37 --preset 4`
 
 ---
 
