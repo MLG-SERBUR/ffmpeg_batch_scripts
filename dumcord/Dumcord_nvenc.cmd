@@ -4,7 +4,7 @@ set "drive=%~d0"
 if not "%drive%"=="%cd:~0,1%" cd /D %drive%
 cd /D %~p0
 REM SET output=%~p1%~n1_Dumcord_Crop.mp4
-SET output=%~nx1_Dumcord_Crop.mp4
+SET output=%~nx1_nvenc.mp4
 set cmd="ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 %1 "
 FOR /F "tokens=*" %%i IN (' %cmd% ') DO SET seconds=%%i
 echo %seconds% seconds
@@ -17,12 +17,13 @@ SET overheadBitrate=0
 SET audioBitrate=96000
 SET /A "videoBitrate=totalBitrate-audioBitrate-overheadBitrate"
 ffmpeg ^
+    -hwaccel cuda -hwaccel_output_format cuda -c:v h264_cuvid^
 	-y ^
 	-i %1 ^
 	-c:v h264_nvenc ^
 	-b:v %videoBitrate% ^
 	-movflags +faststart ^
-	-preset slow ^
+	-preset p1 ^
 	-b:a %audioBitrate% "%output%"
 if NOT ["%errorlevel%"]==["0"] goto:error
 echo [92m%~n1 Done![0m
