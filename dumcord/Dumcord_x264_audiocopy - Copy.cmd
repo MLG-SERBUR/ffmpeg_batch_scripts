@@ -15,7 +15,7 @@ echo aaaa
 SET /A "totalBitrate=82000000/seconds"
 SET overheadBitrate=0
 SET audioBitrate=50000
-SET /A "videoBitrate=totalBitrate-audioBitrate-overheadBitrate"
+SET /A "videoBitrate=14000000"
 ffmpeg ^
 	-i %1 ^
 	-c:v libx264 ^
@@ -33,7 +33,7 @@ ffmpeg ^
 	-movflags +faststart ^
 	-preset slow ^
 	-x264-params open-gop=1 ^
-	-map 0 -map -0:a:1 -map -0:a:2 -map -0:a:3 "%output%"
+	-c:a copy "%output%"
 del /q ffmpeg2pass-*.log ffmpeg2pass-*.mbtree
 if NOT ["%errorlevel%"]==["0"] goto:error
 echo [92m%~n1 Done![0m
@@ -51,4 +51,4 @@ exit 0
 :end
 
 echo [92mEncoding succesful. This window will close after 10 seconds.[0m
-timeout /t 10
+timeout /t 120

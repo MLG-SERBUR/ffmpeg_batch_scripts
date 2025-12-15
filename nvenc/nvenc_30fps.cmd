@@ -4,37 +4,28 @@ set "drive=%~d0"
 if not "%drive%"=="%cd:~0,1%" cd /D %drive%
 cd /D %~p0
 REM SET output=%~p1%~n1_Dumcord_Crop.mp4
-SET output=%~nx1_Dumcord_audiocopy.mp4
+SET output=%~nx1_nvenc.mp4
 set cmd="ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 %1 "
 FOR /F "tokens=*" %%i IN (' %cmd% ') DO SET seconds=%%i
 echo %seconds% seconds
-set /a seconds+=1
+set /a seconds+=2
 echo %seconds% seconds
 echo aaaa
 echo aaaa
 SET /A "totalBitrate=82000000/seconds"
 SET overheadBitrate=0
-SET audioBitrate=50000
+SET audioBitrate=96000
 SET /A "videoBitrate=totalBitrate-audioBitrate-overheadBitrate"
 ffmpeg ^
-	-i %1 ^
-	-c:v libx264 ^
-	-b:v %videoBitrate% ^
-	-pass 1 -an ^
-	-preset slow ^
-	-x264-params open-gop=1 ^
-	-f mp4 NUL && \
-ffmpeg ^
+    -hwaccel cuda -hwaccel_output_format cuda -c:v h264_cuvid^
 	-y ^
 	-i %1 ^
-	-c:v libx264 ^
+	-c:v h264_nvenc ^
 	-b:v %videoBitrate% ^
-	-pass 2 ^
 	-movflags +faststart ^
-	-preset slow ^
-	-x264-params open-gop=1 ^
-	-map 0 -map -0:a:1 -map -0:a:2 -map -0:a:3 "%output%"
-del /q ffmpeg2pass-*.log ffmpeg2pass-*.mbtree
+	-preset p1 ^
+	-vf "fps=30" ^
+	-b:a %audioBitrate% "%output%"
 if NOT ["%errorlevel%"]==["0"] goto:error
 echo [92m%~n1 Done![0m
 
