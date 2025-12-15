@@ -70,3 +70,17 @@ crf 20.9 VMAF 95.22 predicted video stream size 109.20 MiB (25%) taking 9 minute
 
 Encode with: ab-av1 encode -e libx265 -i "Marvel-Win64-Shipping 2025.04.23 - 18.01.21.15.DVR.mp4" --crf 21.4 --preset veryslow
 crf 21.4 VMAF 95.22 predicted video stream size 100.53 MiB (23%) taking 73 minutes
+
+### Other tests
+
+123 MB
+> ab-av1 crf-search -i "Marvel-Win64-Shipping 2025.02.20 - 19.19.10.47.DVR.mp4" -e libx265 --preset veryslow
+- crf 28 VMAF 88.29 (34%)                                                                                              )
+- crf 17.2 VMAF 99.03 (153%)                                                                                           )
+- crf 21.3 VMAF 97.55 (92%)                                                                                            )
+- crf 23.1 VMAF 96.11 (71%)                                                                                            )
+- crf 23.8 VMAF 95.36 (64%)                                                                                            )
+  06:56:49 crf 24 full pass ################################################################################### (eta 0s)
+Encode with: ab-av1 encode -e libx265 -i "Marvel-Win64-Shipping 2025.02.20 - 19.19.10.47.DVR.mp4" --crf 24 --preset veryslow
+
+crf 24 VMAF 95.13 predicted video stream size 76.57 MiB (62%) taking 64 minutes
