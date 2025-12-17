@@ -23,7 +23,7 @@ if %COUNTER% GTR 0 (
 	)
 	for %%x in (%*) do (
 REM //////////////////// MAIN \\\\\\\\\\\\\\\\\\\\\\\\\
-		ffmpeg.exe -hide_banner -i %%x -map_metadata 0 -movflags use_metadata_tags -c copy -map 0 -map -0:a:1 "%%~nx_output_stripped.%%~xx"
+		ffmpeg.exe -hide_banner -i %%x -map_metadata 0 -movflags use_metadata_tags -map 0:v -map 0:a:0 -c copy "%%~nx_output_stripped.%%~xx"
 
 	)
 ) else (
