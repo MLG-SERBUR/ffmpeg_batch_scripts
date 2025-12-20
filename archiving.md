@@ -1,15 +1,27 @@
-# Recommended options
+# Compression quality to size ratio
 
-Recommended options for compressing gaming clips (usually hardware encoded and thus larger than they need to be) with minimal loss in quality, tested with a single Marvel Rivals clip.
+Recommended options for compressing gaming clips (usually hardware encoded and thus larger than they need to be) with minimal loss in quality
 
-Sorted from fastest & largest size to slowest & smallest size:
+## Sorted from fastest & largest size to slowest & smallest size:
 
 1. `-c:v libx264 -crf 19 --preset slow`
 1. `-c:v libsvtav1 -crf 33 --preset 8`
 1. `-c:v libsvtav1 -crf 35 --preset 6`
 1. `-c:v libsvtav1 -crf 37 --preset 4`
 
+Tested with a single 20 second Marvel Rivals clip nvenc encoded at 1080p 120fps 183Mb/s (437MB)
+
+## At `-c:v libsvtav1 --crf 37 --preset 4`, expect about 1GB per 12 minutes
+
+(Though it depends on how much motion is happening of course.)
+
+Tested with a 12 minutes 4 seconds Davinci Resolve mp4 export gpu encoded at h265 1080p 68Mb/s (5.74GB)
+
+CPU: i3-12100F: VMAF 96.52 predicted video stream size 1.01 GiB (18%) taking 2 hours (took 1hr13min for me while multitasking). I wanted to be under 1GB and encoded at crf 38, getting 822.14 MiB (14%)
+
 ---
+
+CPU: i7-4790K
 
 File input was 20 seconds at 437MB (~183k mbps encoded with h264 nvenc)
 
