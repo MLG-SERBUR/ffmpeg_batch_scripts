@@ -10,7 +10,7 @@ echo =========================================================
 echo Calculating Duration for: "%~nx1"
 echo =========================================================
 
-REM 1. GET DURATION
+REM GET DURATION
 REM We use 'delims=.' to ignore milliseconds, preventing math errors.
 set "cmd=ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "%~1""
 set "seconds="
@@ -29,13 +29,6 @@ set "overhead=10000"
 
 set /a total_bitrate=target_size / seconds
 set /a video_bitrate=total_bitrate - audio_bitrate - overhead
-
-if %video_bitrate% LSS 1000 (
-    echo.
-    echo [WARNING] Video is too long! Audio track alone is taking up almost 10MB.
-    echo Setting Video Bitrate to minimum (1k). File size may slightly exceed 10MB.
-    set video_bitrate=1000
-)
 
 echo Target Video Bitrate: %video_bitrate%
 echo.
