@@ -12,6 +12,7 @@ if "%OVERHEAD%"==""         set "OVERHEAD=10000"
 if "%VIDEO_ENCODER%"==""    set "VIDEO_ENCODER=libx264 -preset veryslow -x264-params open-gop=1"
 if "%AUDIO_ENCODER%"==""    set "AUDIO_ENCODER=aac"
 if "%OUTPUT_SUFFIX%"==""    set "OUTPUT_SUFFIX=_dumcord"
+if "%OUTPUT_EXT%"==""       set "OUTPUT_EXT=.mp4"
 REM set "VIDEO_FILTERS=-filter:v "crop=in_h:in_h:(in_w-out_w)/2:(in_h-out_h)/2:0""
 
 :loop
@@ -59,7 +60,7 @@ ffmpeg -y -i "%~1" ^
 %VIDEO_FILTERS% %VIDEO_FILTERS_P2% ^
 -pass 2 -passlogfile "ffmpeg2pass" ^
 -movflags +faststart ^
--c:a %AUDIO_ENCODER% -b:a %AUDIO_BITRATE% "%~n1%OUTPUT_SUFFIX%.mp4"
+-c:a %AUDIO_ENCODER% -b:a %AUDIO_BITRATE% "%~n1%OUTPUT_SUFFIX%%OUTPUT_EXT%"
 
 if %errorlevel% neq 0 goto :error
 
