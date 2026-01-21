@@ -1,7 +1,7 @@
 @echo off
 
-if "%VIDEO_ENCODER%"==""       set "VIDEO_ENCODER=-libsvtav1 -crf 37 -preset 4"
-if "%AUDIO_OPTS%"==""       set "AUDIO_OPTS=-c:a copy"
+if "%VIDEO_ENCODER%"==""       set "VIDEO_ENCODER=libsvtav1 -crf 37 -preset 4"
+if "%AUDIO_ENCODER%"==""       set "AUDIO_ENCODER=copy"
 if "%OUTPUT_SUFFIX%"==""    set "OUTPUT_SUFFIX=_av1"
 
 :loop
@@ -24,9 +24,13 @@ if "%FINAL_EXT%"=="" set "FINAL_EXT=%~x1"
 
 echo Output: "%~n1%OUTPUT_SUFFIX%%FINAL_EXT%"
 
+set "MOV_FLAGS="
+if /i "%FINAL_EXT%"==".mp4" set "MOV_FLAGS=-movflags +faststart"
+
 ffmpeg.exe -hide_banner -y -i "%~1" -map_metadata 0 ^
 -c:v %VIDEO_ENCODER% ^
-%AUDIO_OPTS% ^
+-c:a %AUDIO_ENCODER% ^
+%MOV_FLAGS% ^
 "%~dp1%~n1%OUTPUT_SUFFIX%%FINAL_EXT%"
 
 if %errorlevel% neq 0 goto :error
