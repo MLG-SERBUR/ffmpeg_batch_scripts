@@ -4,7 +4,7 @@ set "drive=%~d0"
 if not "%drive%"=="%cd:~0,1%" cd /D %drive%
 cd /D %~p0
 REM SET output=%~p1%~n1_Dumcord_Crop.mp4
-SET output=%~nx1_Dumcord_Crop.mp4
+SET output=%~nx1_Dumcord_crush.mp4
 set cmd="ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 %1 "
 FOR /F "tokens=*" %%i IN (' %cmd% ') DO SET seconds=%%i
 echo %seconds% seconds
@@ -22,6 +22,7 @@ ffmpeg ^
 	-b:v %videoBitrate% ^
 	-pass 1 -an ^
 	-preset veryslow ^
+        -vf "noise=alls=18:allf=t+u,curves=all='0/0 0.2/0 1/1'" -pix_fmt yuv420p ^
 	-x264-params open-gop=1 ^
 	-f mp4 NUL && \
 ffmpeg ^
@@ -31,6 +32,7 @@ ffmpeg ^
 	-b:v %videoBitrate% ^
 	-pass 2 ^
 	-movflags +faststart ^
+        -vf "noise=alls=18:allf=t+u,curves=all='0/0 0.2/0 1/1'" -pix_fmt yuv420p ^
 	-preset veryslow ^
 	-x264-params open-gop=1 ^
 	-an "%output%"

@@ -1,40 +1,49 @@
 @echo off
-:again
-set "drive=%~d0"
-if not "%drive%"=="%cd:~0,1%" cd /D %drive%
-cd /D %~p0
-REM SET output=%~p1%~n1_av1.mp4
-SET output=%~nx1_av1.mp4
-set cmd="ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 %1 "
-FOR /F "tokens=*" %%i IN (' %cmd% ') DO SET seconds=%%i
-echo %seconds% seconds
-set /a seconds+=1
-echo %seconds% seconds
-echo aaaa
-echo aaaa
-ffmpeg ^
-	-y ^
-	-i %1 ^
-	-c:v libsvtav1 ^
-	-crf 37 ^
-	-movflags +faststart ^
-	-preset 4 ^
-	-c:a copy "%output%"
-del /q ffmpeg2pass-*.log ffmpeg2pass-*.mbtree
-if NOT ["%errorlevel%"]==["0"] goto:error
-echo [92m%~n1 Done![0m
+cd /d "%~dp0"
 
+:loop
+REM Check if we have no more files to process
+if "%~1"=="" goto :end
+
+echo.
+echo =========================================================
+echo Processing: "%~nx1"
+echo =========================================================
+
+REM COMMAND EXPLANATION:
+REM "%~n1" gives just the filename (no extension)
+REM "%~x1" gives just the extension (.mp4, .mkv, etc)
+
+REM use "%~dp1%~n1_av1%~x1" to save in the same directory as the source file
+
+ffmpeg.exe -hide_banner -y -i "%~1" -map_metadata 0 ^
+-c:v libsvtav1 -crf 37 -preset 4 ^
+-movflags +faststart ^
+-c:a copy "%~n1_av1%~x1"
+
+REM Check for error. If exit code is NOT 0, go to error handling.
+if %errorlevel% neq 0 goto :error
+
+echo [SUCCESS] "%~nx1" finished.
+
+REM Shift moves to the next file in the drag-and-drop list
 shift
-if "%~1" == "" goto:end
-goto:again
+goto :loop
 
 :error
- 
-echo [93mThere was an error. Please check your input file or report an issue on github.com/L0Lock/FFmpeg-bat-collection/issues.[0m
+color 0c
+echo.
+echo #########################################################
+echo CRITICAL ERROR DETECTED!
+echo The encoding failed on file: "%~nx1"
+echo Process stopped.
+echo #########################################################
 pause
-exit 0
+exit /b 1
 
 :end
-
-echo [92mEncoding succesful. This window will close after 10 seconds.[0m
-timeout /t 10
+echo.
+echo =========================================================
+echo All files processed successfully.
+echo =========================================================
+pause
