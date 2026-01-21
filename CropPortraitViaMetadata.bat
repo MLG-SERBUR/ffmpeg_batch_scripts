@@ -1,6 +1,22 @@
 @echo off
 cd /d "%~dp0"
 
+REM Crops to portrait in h264 metadata via bitstream filter (lossless crop).
+
+REM Other attempts to investigate in future:
+
+REM Crop to square on decode using CUDA with `h264_cuvid` decoder.
+REM This decoder is slightly older than the modern nvdec implementation but is the only one that supports hardware-level cropping during the decode stage.
+REM Use `hevc_cuvid` for HEVC.
+REM ffmpeg.exe -loglevel info -hide_banner -c:v h264_cuvid -crop 500x500x500x500 -i %%x -c:v h264_nvenc -profile:v high -level 5.1 -cq 25 -g 30 -bf 0 -c:a copy -map_metadata 0 -map 0 -map -0:a:1 "%%~nx_output_Crop.%%~xx"
+
+REM Decode in GPU, Crop to square in CPU.
+REM Setting `hwaccel_output_format cuda` will keep frames in GPU thus preventing CPU crop filter from being applied
+REM `hwdownload,format=nv12` before the crop and `hwupload` after if you want to manually tell ffmpeg to move frames between GPU and CPU, or just omit `hwaccel_output_format`.
+REM `hwaccel cuda` is a generic hardware acceleration switch.
+REM ffmpeg.exe -loglevel debug -hide_banner -hwaccel cuda -i %%x -c:v h264_nvenc -profile:v high -level 5.1 -cq 26 -g 30 -bf 0 -filter:v "crop=in_h:in_h:(in_w-out_w)/2:(in_h-out_h)/2:0" -c:a copy -map_metadata 0 -map 0 -map -0:a:1 "%%~nx_output_Crop.%%~xx"
+
+
 :loop
 REM Check if we have no more files to process
 if "%~1"=="" goto :end
