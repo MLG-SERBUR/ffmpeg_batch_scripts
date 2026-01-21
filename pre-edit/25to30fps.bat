@@ -1,33 +1,45 @@
 @echo off
-echo %CD%
-echo %~dp0
-cd /d %~dp0
+cd /d "%~dp0"
 
-REM For first file
-REM %1
-REM For multiple files
-echo %*
+:loop
+REM Check if we have no more files to process
+if "%~1"=="" goto :end
 
-set COUNTER=0
-for %%x in (%*) do (
-	echo %%x
-	set /A COUNTER+=1
-)
-echo COUNTER = %COUNTER%
+echo.
+echo =========================================================
+echo Processing: "%~nx1"
+echo =========================================================
 
-if %COUNTER% GTR 0 (
-	if %COUNTER% EQU 1 (
-		echo _____GET ONE FILE_____
-	) else (
-		echo _____GET MULTI FILES: %COUNTER% files_____
-	)
-	for %%x in (%*) do (
-REM //////////////////// MAIN \\\\\\\\\\\\\\\\\\\\\\\\\
-		ffmpeg.exe -hide_banner -itsscale 0.83333333 -i %%x -map_metadata 0 -movflags use_metadata_tags -c copy -map 0 "%%~nx_output_copy.%%~xx"
+REM -itsscale 0.83333333 : Rescales timestamps (1 / 0.833 = 1.2x speed approx)
+REM -movflags use_metadata_tags : Allows arbitrary tags in output
 
-	)
-) else (
-	echo _____GET NO ONE FILES_____
-)
+ffmpeg.exe -hide_banner -itsscale 0.83333333 -i "%~1" ^
+-map_metadata 0 -movflags use_metadata_tags ^
+-c copy -map 0 ^
+"%~dp1%~n1_output_copy%~x1"
 
+if %errorlevel% neq 0 goto :error
+
+echo [SUCCESS] "%~nx1" finished.
+
+REM Shift moves to the next file in the drag-and-drop list
+shift
+goto :loop
+
+:error
+color 0c
+echo.
+echo #########################################################
+echo CRITICAL ERROR DETECTED!
+echo Process stopped on file: "%~nx1"
+echo #########################################################
 pause
+exit /b 1
+
+:end
+echo.
+echo =========================================================
+echo All files processed successfully.
+echo =========================================================
+pause
+exit /b 0
