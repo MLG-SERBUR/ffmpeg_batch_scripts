@@ -31,12 +31,10 @@ if "%CODEC%"=="" (
 if %WIDTH% leq %HEIGHT% (
     echo.
     echo [FAILURE] Input video is %WIDTH%x%HEIGHT% ^(Not Landscape^).
-    echo This script requires Landscape video to perform a Square crop.
     goto :error
 )
 
 REM 2. DETERMINE CROP VALUES (Math)
-REM Goal: Create a 1:1 Square Crop (Best "safe" format for Shorts/Feeds from Landscape)
 REM Formula: (Width - Height) / 2
 REM Example: 1920x1080 -> (1920-1080)/2 = 420px crop on Left and Right. Result: 1080x1080.
 set /a "CROP_VAL=(WIDTH - HEIGHT) / 2"

@@ -31,17 +31,18 @@ if "%CODEC%"=="" (
 if %WIDTH% leq %HEIGHT% (
     echo.
     echo [FAILURE] Input video is %WIDTH%x%HEIGHT% ^(Not Landscape^).
-    echo This script requires Landscape video to perform a Square crop.
     goto :error
 )
 
-REM 2. DETERMINE CROP VALUES (Math)
-REM Goal: Create a 1:1 Square Crop (Best "safe" format for Shorts/Feeds from Landscape)
-REM Formula: (Width - Height) / 2
-REM Example: 1920x1080 -> (1920-1080)/2 = 420px crop on Left and Right. Result: 1080x1080.
-set /a "CROP_VAL=(WIDTH - HEIGHT) / 2"
+REM 2. DETERMINE CROP VALUES (Math for 9:16 Portrait)
+REM Target Width = (Height * 9) / 16
+REM Example: 1080p Height -> 607.5 Width (Batch rounds down to 607)
+REM Crop = (Current Width - Target Width) / 2
+set /a "TARGET_WIDTH=(HEIGHT * 9) / 16"
+set /a "CROP_VAL=(WIDTH - TARGET_WIDTH) / 2"
 
 echo Resolution: %WIDTH%x%HEIGHT% (%CODEC%)
+echo Target 9:16 Width: ~%TARGET_WIDTH% px
 echo Calculated Crop: %CROP_VAL% px (Left/Right)
 
 set "BSF_FILTER="
@@ -58,7 +59,7 @@ if "%BSF_FILTER%"=="" (
 ffmpeg -hide_banner -y -i "%~1" -map_metadata 0 ^
 -c:v copy -bsf:v %BSF_FILTER%="crop_left=%CROP_VAL%:crop_right=%CROP_VAL%" ^
 -c:a copy ^
-"%~dp1%~n1_lossless_square%~x1"
+"%~dp1%~n1_lossless_portrait%~x1"
 
 if %errorlevel% neq 0 goto :error
 
