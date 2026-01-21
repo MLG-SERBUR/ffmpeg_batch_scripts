@@ -4,6 +4,7 @@ cd /d "%~dp0"
 REM Crops to portrait in h264 metadata via bitstream filter (lossless crop).
 
 REM Other attempts to investigate in future:
+REM https://www.rendi.dev/post/ffmpeg-8-0-part-2-how-to-use-pad_cuda
 
 REM Crop to square on decode using CUDA with `h264_cuvid` decoder.
 REM This decoder is slightly older than the modern nvdec implementation but is the only one that supports hardware-level cropping during the decode stage.

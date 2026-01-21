@@ -1,5 +1,7 @@
 @echo off
 
+REM Generic compression script. Uses SVT-AV1 codec by default.
+
 if "%VIDEO_ENCODER%"==""       set "VIDEO_ENCODER=libsvtav1 -crf 37 -preset 4"
 if "%AUDIO_ENCODER%"==""       set "AUDIO_ENCODER=copy"
 if "%OUTPUT_SUFFIX%"==""    set "OUTPUT_SUFFIX=_av1"

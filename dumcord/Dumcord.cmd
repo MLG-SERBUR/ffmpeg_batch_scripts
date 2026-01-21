@@ -1,15 +1,11 @@
 @echo off
-REM =========================================================
-REM MASTER ENCODING LOGIC
-REM Expects variables to be set by the calling script.
-REM Defaults are provided below if variables are missing.
-REM =========================================================
+REM 2 pass encoding with 10MB dumcord limit
 
-REM --- DEFAULTS ---
 if "%TARGET_SIZE%"==""      set "TARGET_SIZE=82000000"
 if "%AUDIO_BITRATE%"==""    set "AUDIO_BITRATE=96000"
 if "%OVERHEAD%"==""         set "OVERHEAD=10000"
-if "%VIDEO_ENCODER%"==""    set "VIDEO_ENCODER=libx264 -preset veryslow -x264-params open-gop=1"
+REM if "%VIDEO_ENCODER%"==""    set "VIDEO_ENCODER=libx264 -preset veryslow -x264-params open-gop=1"
+if "%VIDEO_ENCODER%"==""    set "VIDEO_ENCODER=libx265 -preset slow -tag:v hvc1 -x265-params open-gop=1"
 if "%AUDIO_ENCODER%"==""    set "AUDIO_ENCODER=aac"
 if "%OUTPUT_SUFFIX%"==""    set "OUTPUT_SUFFIX=_dumcord"
 if "%OUTPUT_EXT%"==""       set "OUTPUT_EXT=.mp4"

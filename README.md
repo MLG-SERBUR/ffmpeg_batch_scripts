@@ -1,5 +1,5 @@
-A repo of some scripts to quickly modify or compress videos.
+A repo of Windows ffmpeg scripts for quickly compressing and/or modifying videos.
 
-Also some notes on how I create videos.
+Drag and drop your videos on top of the desired ffmpeg script.
 
-I have this in this account as these are primarily intended for non-important media (gaming clips) or internet delivery (compression for serving on internet). Archival scripts/commands I'll have posted elsewhere whenever I get around to publishing them from my OneNote.
+These are primarily intended for internet delivery (gaming clips and compression for serving on internet). Archival scripts/commands I'll have posted elsewhere whenever I get around to publishing them from my OneNote.
