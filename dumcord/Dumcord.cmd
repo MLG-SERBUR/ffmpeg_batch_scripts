@@ -24,13 +24,14 @@ echo Encoder: %VIDEO_ENCODER%
 echo =========================================================
 
 REM GET DURATION
-set "cmd=ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "%~1""
+REM using CSV output to avoid "=" character issues
 set "seconds="
-for /f "tokens=1 delims=." %%a in ('%cmd%') do set "seconds=%%a"
+for /f "delims=" %%a in ('ffprobe -v error -select_streams v:0 -show_entries format^=duration -of csv^=p^=0 "%~1"') do (
+    for /f "tokens=1 delims=." %%b in ("%%a") do set "seconds=%%b"
+)
 
-REM Safety: Default to 1 second if detection fails
 if "%seconds%"=="" set seconds=1
-set /a seconds+=1
+if %seconds% EQU 0 set seconds=1
 
 echo Duration: ~%seconds% seconds.
 
@@ -43,7 +44,7 @@ if defined VIDEO_FILTERS echo Filters Applied: %VIDEO_FILTERS%
 echo.
 
 echo --- Running Pass 1 ---
-ffmpeg -y -i "%~1" ^
+ffmpeg -hide_banner -y -i "%~1" ^
 -c:v %VIDEO_ENCODER% -b:v %video_bitrate% ^
 %VIDEO_FILTERS% %VIDEO_FILTERS_P1% ^
 -pass 1 -passlogfile "ffmpeg2pass" ^
@@ -53,7 +54,7 @@ if %errorlevel% neq 0 goto :error
 
 echo.
 echo --- Running Pass 2 ---
-ffmpeg -y -i "%~1" ^
+ffmpeg -hide_banner -y -i "%~1" ^
 -c:v %VIDEO_ENCODER% -b:v %video_bitrate% ^
 %VIDEO_FILTERS% %VIDEO_FILTERS_P2% ^
 -pass 2 -passlogfile "ffmpeg2pass" ^
@@ -77,7 +78,6 @@ echo.
 echo #########################################################
 echo CRITICAL ERROR DETECTED!
 echo Encoding failed on file: "%~nx1"
-echo Process stopped.
 echo #########################################################
 del /q "ffmpeg2pass-0.log" "ffmpeg2pass-0.mbtree" 2>nul
 pause

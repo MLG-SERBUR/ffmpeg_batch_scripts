@@ -2,7 +2,11 @@
 
 ## ab-av1 adds additional parameters to VMAF by default
 
-I'm not sure why it does this but it automatically scales and sets fps to 25. I've found this to cause more issues than it solves.
+I'm not sure why it does this but it automatically scales and sets fps to 25. Iirc scales up videos lower than HD resolution. I'm not sure what the rationale is for scaling lower resolution videos - is the VMAF algorithm more accurate on upscaled videos?
+
+https://github.com/alexheretic/ab-av1/issues/141#issuecomment-1524884921
+
+Anyways, to undo these additional changes, add
 
 ```
 --vmaf-fps 0 --vmaf-scale none
