@@ -57,29 +57,33 @@ REM ================= ENCODE LOOP =================
 for /L %%i in (0,1,%ENCODER_COUNT%-1) do (
 
   for /f "tokens=1,2 delims=|" %%A in ("!ENCODERS[%%i]!") do (
-    set LABEL=%%A
-    set VIDEO_ENCODER=%%B
+    set "LABEL=%%A"
+    set "VIDEO_ENCODER=%%B"
   )
 
-  set PASSLOG=ffmpeg2pass_!LABEL!
-  set OUTPUT=%BASENAME%_!LABEL!%OUTPUT_EXT%
-  set VMAF_JSON=%BASENAME%_!LABEL!_vmaf.json
+  set "PASSLOG=ffmpeg2pass_!LABEL!"
+  set "OUTPUT=%BASENAME%_!LABEL!%OUTPUT_EXT%"
+  set "VMAF_JSON=%BASENAME%_!LABEL!_vmaf.json"
 
   echo ---------------------------------------------------------
   echo Encoder: !LABEL!
   echo Output : !OUTPUT!
   echo ---------------------------------------------------------
 
-  echo --- Pass 1 ---
+  REM --- Pass 1 ---
   ffmpeg -y -i "%INPUT%" ^
     -c:v !VIDEO_ENCODER! -b:v %video_bitrate% ^
     %VIDEO_FILTERS% ^
     -pass 1 -passlogfile "!PASSLOG!" ^
     -an -f null NUL
 
-  if errorlevel 1 goto :error
+  if errorlevel 1 (
+      echo ERROR: Pass 1 failed for !LABEL! on %~nx1
+      pause
+      goto :error
+  )
 
-  echo --- Pass 2 ---
+  REM --- Pass 2 ---
   ffmpeg -y -i "%INPUT%" ^
     -c:v !VIDEO_ENCODER! -b:v %video_bitrate% ^
     %VIDEO_FILTERS% ^
@@ -87,18 +91,30 @@ for /L %%i in (0,1,%ENCODER_COUNT%-1) do (
     %MOV_FLAGS% ^
     -c:a %AUDIO_ENCODER% -b:a %AUDIO_BITRATE% "!OUTPUT!"
 
-  if errorlevel 1 goto :error
+  if errorlevel 1 (
+      echo ERROR: Pass 2 failed for !LABEL! on %~nx1
+      pause
+      goto :error
+  )
 
   del /q "!PASSLOG!-0.log" "!PASSLOG!-0.mbtree" 2>nul
 
-  echo --- VMAF ---
+  REM --- VMAF ---
+  echo --- Running VMAF for !LABEL! ---
   ab-av1 vmaf ^
     --reference "%INPUT%" ^
     --distorted "!OUTPUT!" ^
     --model vmaf_v0.6.1 ^
     --subsample 1 ^
-    --vmaf-fps 0 --vmaf-scale none ^
+    --vmaf-scale none ^
+    --vmaf-fps 0 ^
     --json "!VMAF_JSON!" >> "%VMAF_SUMMARY%"
+
+  if errorlevel 1 (
+      echo ERROR: VMAF failed for !LABEL! on %~nx1
+      pause
+      goto :error
+  )
 
   echo. >> "%VMAF_SUMMARY%"
   echo [OK] !LABEL! finished.
@@ -110,11 +126,10 @@ goto :loop
 
 REM ================= ERROR =================
 :error
-color 0c
 echo.
 echo #########################################################
-echo ENCODING OR VMAF FAILED
-echo File : "%~nx1"
+echo CRITICAL ERROR ON FILE: "%~nx1"
+echo Check above messages for details
 echo #########################################################
 pause
 exit /b 1
