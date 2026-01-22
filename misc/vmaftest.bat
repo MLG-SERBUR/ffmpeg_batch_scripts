@@ -1,6 +1,22 @@
 @echo off
 setlocal enabledelayedexpansion
 
+REM --- Force working directory to the folder where this script lives ---
+cd /d "%~dp0"
+set "SCRIPT_DIR=%~dp0"
+
+REM --- Generate Timestamped Log File name ---
+for /f "tokens=2-4 delims=/ " %%a in ('date /t') do (set mydate=%%c-%%a-%%b)
+for /f "tokens=1-2 delims=: " %%a in ('time /t') do (set mytime=%%a-%%b)
+set "VMAF_LOG=%SCRIPT_DIR%vmaf_!mydate!_!mytime!.log"
+
+echo Starting process... 
+echo Scripts and Output folder: %SCRIPT_DIR%
+echo Log file: %VMAF_LOG%
+echo ========================================================= > "%VMAF_LOG%"
+echo ENCODING LOG - %DATE% %TIME% >> "%VMAF_LOG%"
+echo ========================================================= >> "%VMAF_LOG%"
+
 REM --- Configuration ---
 if "%TARGET_SIZE%"==""      set "TARGET_SIZE=82000000"
 if "%AUDIO_BITRATE%"==""    set "AUDIO_BITRATE=96000"
@@ -8,33 +24,25 @@ if "%OVERHEAD%"==""         set "OVERHEAD=10000"
 if "%AUDIO_ENCODER%"==""    set "AUDIO_ENCODER=aac"
 if "%OUTPUT_EXT%"==""       set "OUTPUT_EXT=.mp4"
 
-set "VMAF_LOG=vmaf_results.txt"
-
 :loop
 if "%~1" == "" goto end
 
 echo.
-echo =========================================================
-echo Processing Source: "%~nx1"
-echo =========================================================
+echo [SOURCE] Processing: "%~nx1"
+echo [SOURCE] Processing: "%~nx1" >> "%VMAF_LOG%"
 
-REM --- Calculate Duration and Bitrate ---
-set "seconds="
+REM --- Calculate Duration ---
+set "seconds_dur="
 for /f "delims=" %%a in ('ffprobe -v error -select_streams v:0 -show_entries format^=duration -of csv^=p^=0 "%~1"') do (
-    for /f "tokens=1 delims=." %%b in ("%%a") do set "seconds=%%b"
+    for /f "tokens=1 delims=." %%b in ("%%a") do set "seconds_dur=%%b"
 )
-if "%seconds%"=="" set seconds=1
-if %seconds% EQU 0 set seconds=1
+if "%seconds_dur%"=="" set seconds_dur=1
+if %seconds_dur% EQU 0 set seconds_dur=1
 
-set /a total_bitrate=TARGET_SIZE / seconds
+set /a total_bitrate=TARGET_SIZE / seconds_dur
 set /a video_bitrate=total_bitrate - AUDIO_BITRATE - OVERHEAD
 
-echo Duration: ~%seconds% seconds
-echo Target Video Bitrate: %video_bitrate%
-echo ---------------------------------------------------------
-
-REM --- Define the presets to loop through ---
-REM Format: "EncoderName|Preset|Suffix|ExtraParams"
+REM --- Presets ---
 for %%A in (
     "libx264|veryslow|_x264_veryslow|-x264-params open-gop=1"
     "libx265|medium|_x265_medium|-tag:v hvc1 -x265-params open-gop=1"
@@ -45,39 +53,41 @@ for %%A in (
         set "PRESET=%%C"
         set "SUFFIX=%%D"
         set "PARAMS=%%E"
-        set "OUTFILE=%~n1!SUFFIX!%OUTPUT_EXT%"
-
-        echo.
-        echo [RUNNING] Encoder: !ENC! (!PRESET!) 
-        echo [OUTPUT]  !OUTFILE!
-
-        REM --- Pass 1 ---
-        ffmpeg -hide_banner -y -i "%~1" ^
-            -c:v !ENC! -preset !PRESET! !PARAMS! -b:v %video_bitrate% ^
-            %VIDEO_FILTERS% -pass 1 -passlogfile "ffmpeg2pass" ^
-            -an -f null NUL
         
-        if !errorlevel! neq 0 goto error
+        REM --- Set OUTFILE to the script's directory ---
+        set "OUTFILE=%SCRIPT_DIR%%~n1!SUFFIX!%OUTPUT_EXT%"
 
-        REM --- Pass 2 ---
-        ffmpeg -hide_banner -y -i "%~1" ^
-            -c:v !ENC! -preset !PRESET! !PARAMS! -b:v %video_bitrate% ^
-            %VIDEO_FILTERS% -pass 2 -passlogfile "ffmpeg2pass" ^
-            -movflags +faststart ^
-            -c:a %AUDIO_ENCODER% -b:a %AUDIO_BITRATE% "!OUTFILE!"
+        echo [STARTING] !ENC! / !PRESET!
 
-        if !errorlevel! neq 0 goto error
+        REM --- START TIMER ---
+        set "t=!TIME: =0!"
+        set /a "h=1!t:~0,2!-100, m=1!t:~3,2!-100, s=1!t:~6,2!-100"
+        set /a "start_total=h*3600 + m*60 + s"
 
-        REM --- VMAF Comparison ---
-        echo [VMAF] Comparing !OUTFILE! to source...
-        echo | set /p="File: %~nx1 | Preset: !ENC!_!PRESET! | " >> "%VMAF_LOG%"
+        REM --- FFmpeg Pass 1 (Temp logs created in Script Dir) ---
+        ffmpeg -hide_banner -y -i "%~1" -c:v !ENC! -preset !PRESET! !PARAMS! -b:v %video_bitrate% -pass 1 -passlogfile "%SCRIPT_DIR%ffmpeg2pass" -an -f null NUL
         
-        REM Run ab-av1 and append only the VMAF result line to the log
-        ab-av1 vmaf --reference "%~1" --distorted "!OUTFILE!" --vmaf-fps 0 --vmaf-scale none >> "%VMAF_LOG%"
+        REM --- FFmpeg Pass 2 ---
+        ffmpeg -hide_banner -y -i "%~1" -c:v !ENC! -preset !PRESET! !PARAMS! -b:v %video_bitrate% -pass 2 -passlogfile "%SCRIPT_DIR%ffmpeg2pass" -movflags +faststart -c:a %AUDIO_ENCODER% -b:a %AUDIO_BITRATE% "!OUTFILE!"
+
+        REM --- END TIMER ---
+        set "t=!TIME: =0!"
+        set /a "h=1!t:~0,2!-100, m=1!t:~3,2!-100, s=1!t:~6,2!-100"
+        set /a "end_total=h*3600 + m*60 + s"
+        if !end_total! lss !start_total! set /a end_total+=86400
+        set /a ELAPSED=end_total-start_total
+
+        REM --- LOGGING TO FILE ---
+        echo [LOGGING] Writing results to %VMAF_LOG%
+        echo File: %~nx1 ^| Encoder: !ENC! ^| Preset: !PRESET! ^| Time: !ELAPSED!s >> "%VMAF_LOG%"
+        
+        echo [VMAF] Running ab-av1...
+        ab-av1 vmaf --reference "%~1" --distorted "!OUTFILE!" --vmaf-fps 0 --vmaf-scale none >> "%VMAF_LOG%" 2>&1
+        
         echo --------------------------------------------------------- >> "%VMAF_LOG%"
 
-        REM Clean up temp files
-        del /q "ffmpeg2pass-0.log" "ffmpeg2pass-0.mbtree" 2>nul
+        REM Clean up temp pass files in Script Dir
+        del /q "%SCRIPT_DIR%ffmpeg2pass-0.log" "%SCRIPT_DIR%ffmpeg2pass-0.mbtree" 2>nul
     )
 )
 
@@ -85,19 +95,14 @@ shift
 goto loop
 
 :error
-color 0c
-echo.
-echo #########################################################
-echo CRITICAL ERROR DETECTED!
-echo Encoding failed on: "%~nx1"
-echo #########################################################
+echo ERROR: Script failed at %TIME% >> "%VMAF_LOG%"
 pause
 exit /b 1
 
 :end
 echo.
 echo =========================================================
-echo All files processed. Results saved to %VMAF_LOG%
+echo All files processed.
+echo Output Videos and Log are in: %SCRIPT_DIR%
 echo =========================================================
 pause
-exit /b 0
