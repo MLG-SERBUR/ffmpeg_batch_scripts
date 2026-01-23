@@ -2,11 +2,9 @@
 
 REM Generic compression script. Uses SVT-AV1 codec by default.
 
-if "%VIDEO_ENCODER%"==""       set "VIDEO_ENCODER=libsvtav1 -crf 37 -preset 4"
-if "%AUDIO_ENCODER%"==""       set "AUDIO_ENCODER=copy"
-if "%OUTPUT_SUFFIX%"==""    set "OUTPUT_SUFFIX=_av1"
-set "VF=" & if defined VIDEO_FILTER set "VF=-vf "%VIDEO_FILTER%""
-set "FILTER_COMPLEX=" & if defined FILTER_COMPLEX set "FILTER_COMPLEX=-filter_complex "%VIDEO_FILTER_COMPLEX%""
+if not defined VIDEO_ENCODER    set "VIDEO_ENCODER=libsvtav1 -crf 37 -preset 4"
+if not defined AUDIO_ENCODER    set "AUDIO_ENCODER=copy"
+if not defined OUTPUT_SUFFIX    set "OUTPUT_SUFFIX=_av1"
 
 :loop
 REM Check if we have no more files to process
@@ -35,8 +33,6 @@ ffmpeg.exe -hide_banner -y -i "%~1" -map_metadata 0 ^
 -c:v %VIDEO_ENCODER% ^
 -c:a %AUDIO_ENCODER% ^
 %MOV_FLAGS% ^
-%VF% ^
-%FILTER_COMPLEX% ^
 "%~dp1%~n1%OUTPUT_SUFFIX%%FINAL_EXT%"
 
 if %errorlevel% neq 0 goto :error
